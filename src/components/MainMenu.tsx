@@ -70,22 +70,22 @@ export function MainMenu() {
               </div>
             </CardHeader>
             <CardContent className="pt-0 pb-2">
-              <div className="overflow-hidden">
+              <div className="overflow-y-auto max-h-[220px] scrollbar-hide">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border/30">
-                      <th className="w-10 py-1.5 text-left text-muted-foreground font-medium text-xs">#</th>
-                      <th className="py-1.5 text-left text-muted-foreground font-medium text-xs">Name</th>
-                      <th className="py-1.5 text-right text-muted-foreground font-medium text-xs">Score</th>
+                      <th className="w-10 py-1.5 text-center text-muted-foreground font-medium text-xs sticky top-0 bg-card">#</th>
+                      <th className="py-1.5 text-left text-muted-foreground font-medium text-xs sticky top-0 bg-card">Name</th>
+                      <th className="py-1.5 text-right text-muted-foreground font-medium text-xs sticky top-0 bg-card">Score</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {scores.slice(0, 7).map((score, index) => (
+                    {scores.map((score, index) => (
                       <tr 
                         key={score.id} 
                         className="border-b border-border/10 last:border-0"
                       >
-                        <td className="py-1.5">
+                        <td className="py-1.5 text-center">
                           {index < 3 ? (
                             <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-medium ${
                               index === 0 ? 'bg-amber-100 text-amber-600' : 
@@ -95,7 +95,7 @@ export function MainMenu() {
                               {index + 1}
                             </span>
                           ) : (
-                            <span className="pl-2 text-muted-foreground">{index + 1}</span>
+                            <span className="text-muted-foreground">{index + 1}</span>
                           )}
                         </td>
                         <td className="py-1.5 font-medium">{score.name}</td>
