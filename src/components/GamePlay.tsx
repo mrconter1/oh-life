@@ -30,7 +30,7 @@ const CIRCLE_SIZE = 48;
 // Minimum distance between circle centers to prevent overlap
 const MIN_DISTANCE = CIRCLE_SIZE + 8; // Add a small buffer
 // Number of circles to display per round
-const CIRCLES_PER_ROUND = 20;
+const CIRCLES_PER_ROUND = 15;
 // Duration of feedback animation in milliseconds
 const FEEDBACK_DURATION = 300;
 // Small delay to ensure clean transition between rounds
