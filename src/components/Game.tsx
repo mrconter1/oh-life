@@ -13,10 +13,12 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { GamePlay } from "./GamePlay";
 
 export function Game() {
   const [username, setUsername] = useState("");
   const [inputError, setInputError] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
   const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -27,14 +29,25 @@ export function Game() {
       return;
     }
     
-    // Here you would normally store the username or start the game
-    console.log(`Starting game for: ${username}`);
+    // Start the game with the entered username
     setInputError(false);
-    
-    // In a real implementation, you might redirect or change state
-    // router.push(`/game/play?username=${encodeURIComponent(username)}`);
+    setGameStarted(true);
   };
 
+  const handleGameOver = (finalScore: number) => {
+    // In a real app, you might save the score to a database
+    console.log(`Game over for ${username}. Final score: ${finalScore}`);
+    
+    // Return to the main menu
+    router.push("/");
+  };
+
+  // Show the gameplay if the game has started
+  if (gameStarted) {
+    return <GamePlay username={username} onGameOver={handleGameOver} />;
+  }
+
+  // Otherwise show the username input form
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background via-background/95 to-muted p-8">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(var(--primary-rgb),0.05),transparent_40%)] z-0"></div>

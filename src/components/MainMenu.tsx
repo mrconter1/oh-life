@@ -53,7 +53,7 @@ export function MainMenu() {
                   size="lg" 
                   className="w-full h-16 text-lg font-semibold"
                 >
-                  Start Game
+                  Play Now
                 </Button>
               </Link>
             </CardContent>
