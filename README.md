@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Oh Life!
+
+Oh Life! is a game where you listen to a spoken letter, find and click the correct letter among multiple options on the screen to score points and compete on a global leaderboard.
+
+## Overview
+
+"Oh Life!" is a simple but engaging game where players:
+1. Listen to a spoken letter
+2. Find and click on the correct letter among multiple options
+3. Score points for correct selections
+4. Compete on a global leaderboard
+
+## Features
+
+- **Listen & Click Gameplay**: Hear a letter being spoken and find it among multiple options
+- **Real-time Feedback**: Visual feedback for correct and incorrect selections
+- **Global Leaderboard**: Top 25 players displayed with their scores
+- **Responsive Design**: Optimized for both desktop and mobile play
+- **Text-to-Speech**: Clear audio pronunciation of letters
+
+## Tech Stack
+
+- **Frontend**: Next.js 15.3.0 with React 19
+- **UI Framework**: TailwindCSS 4
+- **Database**: Supabase for leaderboard functionality
+- **Speech Synthesis**: Web Speech API for letter pronunciation
 
 ## Getting Started
 
-First, run the development server:
+First, install dependencies:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+Then, create a `.env.local` file with your Supabase credentials:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+Finally, run the development server:
 
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to start playing.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Database Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The game requires a Supabase database with a `scores` table with the following fields:
+- `id`: Auto-incrementing primary key
+- `name`: Text field for player name
+- `score`: Integer field for player score
+- `created_at`: Timestamp with default value of `now()`
 
-## Learn More
+## Deployment
 
-To learn more about Next.js, take a look at the following resources:
+Deploy the application using Vercel for the best experience:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is open source.
