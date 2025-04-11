@@ -143,6 +143,7 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
   const [submitError, setSubmitError] = useState(false);
   const [processingClick, setProcessingClick] = useState(false);
   const [preparingNewRound, setPreparingNewRound] = useState(false);
+  const [showExitConfirmation, setShowExitConfirmation] = useState(false);
 
   // Generate new circles and set a new target
   const generateNewRound = useCallback(() => {
@@ -266,6 +267,21 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
     setShowSubmitForm(true);
   };
 
+  // Handle showing exit confirmation
+  const handleShowExitConfirmation = () => {
+    setShowExitConfirmation(true);
+  };
+
+  // Handle confirming exit to main menu
+  const handleConfirmExit = () => {
+    router.push("/");
+  };
+
+  // Handle canceling exit
+  const handleCancelExit = () => {
+    setShowExitConfirmation(false);
+  };
+
   // Handle score submission
   const handleSubmitScore = (e: React.FormEvent) => {
     e.preventDefault();
@@ -281,10 +297,10 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
     // Return to the main menu
     router.push("/");
   };
-
+  
   // Handle canceling score submission
   const handleSkipSubmit = () => {
-    router.push("/");
+    setShowSubmitForm(false);
   };
 
   // Get the feedback styles based on feedback state
@@ -359,10 +375,17 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
       </div>
       
       {/* Submit Score button */}
-      <div className="absolute top-6 right-6 z-10">
+      <div className="absolute top-6 right-6 z-10 flex gap-2">
+        <Button 
+          variant="outline" 
+          className="px-4 shadow-md cursor-pointer hover:cursor-pointer" 
+          onClick={handleShowExitConfirmation}
+        >
+          Main Menu
+        </Button>
         <Button 
           variant="default" 
-          className="px-5 shadow-md cursor-pointer" 
+          className="px-5 shadow-md cursor-pointer hover:cursor-pointer" 
           onClick={handleShowSubmitForm}
         >
           Submit Score
@@ -373,7 +396,7 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
       <div className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
         <Button
           size="lg"
-          className="px-8 py-6 text-lg shadow-lg cursor-pointer"
+          className="px-8 py-6 text-lg shadow-lg cursor-pointer hover:cursor-pointer"
           onClick={handleNewRound}
           disabled={processingClick || preparingNewRound}
         >
@@ -412,10 +435,11 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
                 
                 <div className="pt-2">
                   <div className="flex flex-col gap-2">
-                    <Button type="submit">Submit Score</Button>
+                    <Button type="submit" className="cursor-pointer hover:cursor-pointer">Submit Score</Button>
                     <Button 
                       type="button"
                       variant="outline" 
+                      className="cursor-pointer hover:cursor-pointer"
                       onClick={handleSkipSubmit}
                     >
                       Cancel
@@ -424,6 +448,36 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
                 </div>
               </div>
             </form>
+          </Card>
+        </div>
+      )}
+
+      {/* Exit confirmation dialog */}
+      {showExitConfirmation && (
+        <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-20">
+          <Card className="w-80 p-6">
+            <h2 className="text-xl font-bold mb-4 text-center">Return to Main Menu?</h2>
+            <div className="mb-6 text-center">
+              <p className="text-muted-foreground">Your current game progress will be lost.</p>
+            </div>
+            <div className="pt-2">
+              <div className="flex flex-col gap-2">
+                <Button 
+                  variant="destructive" 
+                  className="cursor-pointer hover:cursor-pointer"
+                  onClick={handleConfirmExit}
+                >
+                  Yes, Exit Game
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="cursor-pointer hover:cursor-pointer"
+                  onClick={handleCancelExit}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
           </Card>
         </div>
       )}
