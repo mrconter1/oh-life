@@ -7,32 +7,18 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-// Define the available colors and letters
-const COLORS = ["red", "blue", "green", "purple", "orange"] as const;
-type ColorType = typeof COLORS[number];
-
-const LETTERS = ["a", "b", "c", "d", "e"] as const;
+// Define the available letters
+const LETTERS = [
+  "a", "b", "c", "d", "e", 
+  "f", "g", "h", "k", "m",
+  "n", "p", "r", "s", "t",
+  "w", "x", "y", "z"
+] as const;
 type LetterType = typeof LETTERS[number];
-
-// Map color names to tailwind classes
-const COLOR_CLASSES: Record<ColorType, string> = {
-  red: "bg-red-500 hover:bg-red-600",
-  blue: "bg-blue-500 hover:bg-blue-600",
-  green: "bg-green-500 hover:bg-green-600",
-  purple: "bg-purple-500 hover:bg-purple-600",
-  orange: "bg-orange-500 hover:bg-orange-600",
-};
-
-// Type for color/letter combination
-type ColorLetterCombo = {
-  color: ColorType;
-  letter: LetterType;
-};
 
 // Define the circle type
 type Circle = {
   id: number;
-  color: ColorType;
   letter: LetterType;
   x: number;
   y: number;
@@ -42,6 +28,8 @@ type Circle = {
 const CIRCLE_SIZE = 48;
 // Minimum distance between circle centers to prevent overlap
 const MIN_DISTANCE = CIRCLE_SIZE + 8; // Add a small buffer
+// Number of circles to display per round
+const CIRCLES_PER_ROUND = 15;
 
 // Generate a random number between min and max
 const randomNumber = (min: number, max: number) => {
@@ -65,16 +53,23 @@ const wouldOverlap = (x: number, y: number, existingCircles: Circle[]): boolean 
 
 // Generate a valid, non-overlapping position for a circle
 const generateValidPosition = (existingCircles: Circle[], maxWidth: number, maxHeight: number): { x: number; y: number } => {
-  // Padding from edges
-  const padding = CIRCLE_SIZE / 2 + 10;
+  // Padding from edges as percentage of dimensions
+  const horizontalPadding = Math.max(CIRCLE_SIZE / 2 + 10, maxWidth * 0.05);
+  const verticalPadding = Math.max(CIRCLE_SIZE / 2 + 10, maxHeight * 0.05);
+  
+  // Available area for circles
+  const minX = horizontalPadding;
+  const maxX = maxWidth - horizontalPadding;
+  const minY = 120 + verticalPadding; // Add 120px for header
+  const maxY = maxHeight - verticalPadding;
   
   // Max attempts to find a valid position
   const maxAttempts = 100;
   let attempts = 0;
   
   while (attempts < maxAttempts) {
-    const x = randomNumber(padding, maxWidth - padding);
-    const y = randomNumber(120 + padding, maxHeight - padding); // Add 120px for header
+    const x = randomNumber(minX, maxX);
+    const y = randomNumber(minY, maxY);
     
     if (!wouldOverlap(x, y, existingCircles)) {
       return { x, y };
@@ -86,14 +81,14 @@ const generateValidPosition = (existingCircles: Circle[], maxWidth: number, maxH
   // If we can't find a valid position after max attempts, use a grid position
   // This is a fallback to ensure we don't get stuck in an infinite loop
   const gridSize = Math.ceil(Math.sqrt(existingCircles.length + 1)) + 1;
-  const cellWidth = maxWidth / gridSize;
-  const cellHeight = (maxHeight - 120) / gridSize;
+  const cellWidth = (maxX - minX) / gridSize;
+  const cellHeight = (maxY - minY) / gridSize;
   
   // Find an empty cell in a grid pattern
   for (let row = 0; row < gridSize; row++) {
     for (let col = 0; col < gridSize; col++) {
-      const x = col * cellWidth + cellWidth / 2;
-      const y = 120 + row * cellHeight + cellHeight / 2;
+      const x = minX + col * cellWidth + cellWidth / 2;
+      const y = minY + row * cellHeight + cellHeight / 2;
       
       if (!wouldOverlap(x, y, existingCircles)) {
         return { x, y };
@@ -103,22 +98,9 @@ const generateValidPosition = (existingCircles: Circle[], maxWidth: number, maxH
   
   // Last resort: return a position with some jitter, accepting potential overlap
   return {
-    x: randomNumber(padding, maxWidth - padding),
-    y: randomNumber(120 + padding, maxHeight - padding),
+    x: randomNumber(minX, maxX),
+    y: randomNumber(minY, maxY),
   };
-};
-
-// Generate all possible color-letter combinations
-const generateAllCombinations = (): ColorLetterCombo[] => {
-  const combos: ColorLetterCombo[] = [];
-  
-  for (const color of COLORS) {
-    for (const letter of LETTERS) {
-      combos.push({ color, letter });
-    }
-  }
-  
-  return combos;
 };
 
 // Shuffle an array (Fisher-Yates algorithm)
@@ -139,7 +121,6 @@ type GamePlayProps = {
 export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
   const router = useRouter();
   const [circles, setCircles] = useState<Circle[]>([]);
-  const [targetColor, setTargetColor] = useState<ColorType>(COLORS[0]);
   const [targetLetter, setTargetLetter] = useState<LetterType>(LETTERS[0]);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60); // 60 seconds game
@@ -154,32 +135,20 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
   const generateNewRound = useCallback(() => {
     if (!gameActive) return;
     
-    // Generate all possible combinations
-    const allCombos = generateAllCombinations();
+    // Shuffle all available letters
+    const shuffledLetters = shuffleArray([...LETTERS]);
     
-    // Shuffle all combinations
-    const shuffledCombos = shuffleArray(allCombos);
-    
-    // Determine number of circles to show (up to the maximum available combinations)
-    // Make sure we don't add too many circles that won't fit well
-    const maxCirclesForSpace = Math.min(
-      Math.floor((width * height) / (MIN_DISTANCE * MIN_DISTANCE * 2)),
-      25 // Max 25 combinations available
-    );
-    const numCircles = Math.min(randomNumber(10, 15), maxCirclesForSpace, shuffledCombos.length);
-    
-    // Take the first N combinations for this round
-    const selectedCombos = shuffledCombos.slice(0, numCircles);
+    // Take the first N letters for this round
+    const selectedLetters = shuffledLetters.slice(0, CIRCLES_PER_ROUND);
     
     // Create circles with non-overlapping positions
     const newCircles: Circle[] = [];
     
-    selectedCombos.forEach((combo, index) => {
+    selectedLetters.forEach((letter, index) => {
       const { x, y } = generateValidPosition(newCircles, width, height);
       newCircles.push({
         id: index,
-        color: combo.color,
-        letter: combo.letter,
+        letter,
         x,
         y,
       });
@@ -191,7 +160,6 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
     const targetIndex = Math.floor(Math.random() * newCircles.length);
     const targetCircle = newCircles[targetIndex];
     
-    setTargetColor(targetCircle.color);
     setTargetLetter(targetCircle.letter);
   }, [width, height, gameActive]);
 
@@ -237,7 +205,7 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
   const handleCircleClick = (circle: Circle) => {
     if (!gameActive) return;
     
-    if (circle.color === targetColor && circle.letter === targetLetter) {
+    if (circle.letter === targetLetter) {
       // Correct choice
       setScore((prev) => prev + 1);
       generateNewRound();
@@ -297,23 +265,20 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
       {/* Game instruction */}
       <div className="bg-muted p-4 text-center">
         <h2 className="text-xl font-bold">
-          Select{" "}
-          <span className={`font-bold px-2 py-1 rounded text-white ${COLOR_CLASSES[targetColor]}`}>
-            {targetColor}
-          </span>{" "}
-          <span className="font-bold">{targetLetter}</span>
+          Find the letter{" "}
+          <span className="font-bold text-3xl">{targetLetter}</span>
         </h2>
       </div>
 
       {/* Game area */}
       <div 
         id="game-container" 
-        className="flex-1 relative bg-gradient-to-b from-background to-muted overflow-hidden"
+        className="flex-1 relative bg-gradient-to-b from-background to-muted overflow-hidden p-[5%]"
       >
         {circles.map((circle) => (
           <button
             key={circle.id}
-            className={`absolute w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white transition-transform duration-200 ${COLOR_CLASSES[circle.color]}`}
+            className="absolute w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white transition-transform duration-200 bg-black hover:bg-gray-800"
             style={{
               left: `${circle.x}px`,
               top: `${circle.y}px`,
@@ -322,7 +287,7 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              paddingBottom: "2px", // Slight offset to account for visual centering
+              paddingBottom: "2px", // Slight offset for visual centering
               transformOrigin: "center center",
               willChange: "transform",
             }}
