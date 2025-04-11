@@ -123,7 +123,6 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
   const [circles, setCircles] = useState<Circle[]>([]);
   const [targetLetter, setTargetLetter] = useState<LetterType>(LETTERS[0]);
   const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(60); // 60 seconds game
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
   const [gameActive, setGameActive] = useState(true);
@@ -182,22 +181,9 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
       generateNewRound();
     }
 
-    // Timer for the game
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setGameActive(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
     // Cleanup
     return () => {
       window.removeEventListener("resize", updateDimensions);
-      clearInterval(timer);
     };
   }, [width, height, generateNewRound]);
 
@@ -210,6 +196,12 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
       setScore((prev) => prev + 1);
       generateNewRound();
     }
+  };
+
+  // Handle submitting the game
+  const handleShowSubmitForm = () => {
+    setGameActive(false);
+    setShowSubmitForm(true);
   };
 
   // Handle score submission
@@ -228,36 +220,29 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
     router.push("/");
   };
 
-  // Handle skipping score submission
+  // Handle canceling score submission
   const handleSkipSubmit = () => {
     router.push("/");
-  };
-
-  // Show the score submission form
-  const handleShowSubmitForm = () => {
-    setShowSubmitForm(true);
   };
 
   return (
     <div className="flex flex-col h-screen">
       {/* Game header */}
-      <div className="bg-card shadow-md p-4 flex justify-between items-center border-b">
-        <div className="flex items-center gap-4">
+      <div className="bg-card shadow-md py-4 px-6 flex justify-between items-center border-b">
+        <div className="flex items-center gap-6">
           {username && <div className="text-lg font-semibold">Player: {username}</div>}
-          <div className="text-lg font-bold">Score: {score}</div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className={`text-lg font-semibold ${timeLeft <= 10 ? "text-red-500 animate-pulse" : ""}`}>
-            Time: {timeLeft}s
+        <div className="flex items-center gap-6">
+          <div className="flex flex-col items-end">
+            <div className="text-3xl font-bold">{score}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wide">Score</div>
           </div>
           <Button 
-            variant="outline" 
-            className="text-sm" 
-            onClick={() => {
-              setGameActive(false);
-            }}
+            variant="default" 
+            className="px-5" 
+            onClick={handleShowSubmitForm}
           >
-            End Game
+            Submit Score
           </Button>
         </div>
       </div>
@@ -303,36 +288,15 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
           </button>
         ))}
 
-        {/* Game over overlay */}
-        {!gameActive && !showSubmitForm && (
-          <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-            <Card className="w-80 p-6 text-center">
-              <h2 className="text-2xl font-bold mb-4">Game Over!</h2>
-              <p className="text-xl mb-6">Your score: {score}</p>
-              <div className="space-y-3">
-                <Button 
-                  className="w-full" 
-                  onClick={handleShowSubmitForm}
-                >
-                  Submit Score
-                </Button>
-                <Button 
-                  variant="outline"
-                  className="w-full" 
-                  onClick={handleSkipSubmit}
-                >
-                  Back to Menu
-                </Button>
-              </div>
-            </Card>
-          </div>
-        )}
-
         {/* Score submission form */}
         {!gameActive && showSubmitForm && (
           <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
             <Card className="w-80 p-6">
               <h2 className="text-xl font-bold mb-4 text-center">Submit Your Score</h2>
+              <div className="mb-6 text-center">
+                <div className="text-4xl font-bold mb-1">{score}</div>
+                <div className="text-sm text-muted-foreground">Final Score</div>
+              </div>
               <form onSubmit={handleSubmitScore}>
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -354,7 +318,6 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
                   </div>
                   
                   <div className="pt-2">
-                    <p className="text-center mb-3">Score: <span className="font-bold">{score}</span></p>
                     <div className="flex flex-col gap-2">
                       <Button type="submit">Submit Score</Button>
                       <Button 
