@@ -95,14 +95,14 @@ export function MainMenu() {
               </div>
               <Link href="/game" className="w-full self-center mt-auto">
                 <Button 
-                  className="w-full py-6 text-base font-medium shadow-sm transition-all hover:shadow-md"
+                  className="w-full py-6 text-base font-medium shadow-sm transition-all hover:shadow-md cursor-pointer"
                 >
                   Play Now
                 </Button>
               </Link>
             </CardContent>
             <CardFooter className="py-3 text-center border-t border-border/20 bg-muted/20">
-              <span className="text-xs text-muted-foreground">Your progress is lost if you exit – submit your score when you're done</span>
+              <span className="text-xs text-muted-foreground text-center w-full">Your progress is lost if you exit – submit your score when you&apos;re done</span>
             </CardFooter>
           </Card>
 
@@ -178,7 +178,7 @@ export function MainMenu() {
               </div>
             </CardContent>
             <CardFooter className="py-3 text-center border-t border-border/20 bg-muted/20">
-              <span className="text-xs text-muted-foreground">Play now to get your name on the board!</span>
+              <span className="text-xs text-muted-foreground text-center w-full">Play now to get your name on the board!</span>
             </CardFooter>
           </Card>
         </div>

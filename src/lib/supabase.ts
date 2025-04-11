@@ -25,11 +25,12 @@ export async function submitScore(name: string, score: number): Promise<{ succes
     if (error) throw error;
     
     return { success: true };
-  } catch (error: any) {
-    console.error('Error submitting score:', error.message);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to submit score';
+    console.error('Error submitting score:', errorMessage);
     return { 
       success: false, 
-      error: error.message || 'Failed to submit score' 
+      error: errorMessage 
     };
   }
 }
@@ -48,11 +49,12 @@ export async function getTopScores(limit = 25): Promise<{ scores: Score[]; error
     if (error) throw error;
     
     return { scores: data || [] };
-  } catch (error: any) {
-    console.error('Error fetching scores:', error.message);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch scores';
+    console.error('Error fetching scores:', errorMessage);
     return { 
       scores: [], 
-      error: error.message || 'Failed to fetch scores' 
+      error: errorMessage 
     };
   }
 } 

@@ -34,11 +34,8 @@ const MIN_DISTANCE = CIRCLE_SIZE + 8; // Add a small buffer
 const CIRCLES_PER_ROUND = 15;
 // Duration of feedback animation in milliseconds
 const FEEDBACK_DURATION = 300;
-// Small delay to ensure clean transition between rounds
-const TRANSITION_DELAY = 20;
 // Percentage of viewport to use for circle generation
 const PLAY_AREA_WIDTH_PERCENT = 0.8;
-const PLAY_AREA_HEIGHT_PERCENT = 0.8;
 
 // Text-to-speech function to read out a letter
 const speakLetter = (letter: string) => {
@@ -174,7 +171,7 @@ type GamePlayProps = {
   onGameOver?: (score: number) => void;
 };
 
-export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
+export function GamePlay({ }: GamePlayProps = {}) {
   const router = useRouter();
   const [circles, setCircles] = useState<Circle[]>([]);
   const [targetLetter, setTargetLetter] = useState<LetterType | null>(null);
