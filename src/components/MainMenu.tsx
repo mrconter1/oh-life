@@ -52,8 +52,8 @@ export function MainMenu() {
           <Card className="bg-card shadow-md rounded-xl border border-border/50 overflow-hidden flex flex-col">
             <div className="border-b border-border/20">
               <CardHeader className="text-center py-4">
-                <CardTitle className="text-2xl font-bold">Letter Hunt</CardTitle>
-                <CardDescription className="text-sm mt-1">Find letters, earn points, top the leaderboard</CardDescription>
+                <CardTitle className="text-2xl font-bold">Listen & Click</CardTitle>
+                <CardDescription className="text-sm mt-1">Hear the letter, find it fast, top the leaderboard</CardDescription>
               </CardHeader>
             </div>
             <CardContent className="flex flex-col justify-center py-4 px-5 space-y-5 flex-grow">
