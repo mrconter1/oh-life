@@ -95,7 +95,7 @@ export function MainMenu() {
                               {index + 1}
                             </span>
                           ) : (
-                            <span className="text-muted-foreground">{index + 1}</span>
+                            <span className="text-muted-foreground text-xs font-medium">{index + 1}</span>
                           )}
                         </td>
                         <td className="py-1.5 font-medium">{score.name}</td>
