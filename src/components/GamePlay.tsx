@@ -362,7 +362,7 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
       <div className="absolute top-6 right-6 z-10">
         <Button 
           variant="default" 
-          className="px-5 shadow-md" 
+          className="px-5 shadow-md cursor-pointer" 
           onClick={handleShowSubmitForm}
         >
           Submit Score
@@ -373,7 +373,7 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
       <div className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
         <Button
           size="lg"
-          className="px-8 py-6 text-lg shadow-lg"
+          className="px-8 py-6 text-lg shadow-lg cursor-pointer"
           onClick={handleNewRound}
           disabled={processingClick || preparingNewRound}
         >
