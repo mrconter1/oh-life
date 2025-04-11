@@ -35,6 +35,9 @@ const CIRCLES_PER_ROUND = 15;
 const FEEDBACK_DURATION = 300;
 // Small delay to ensure clean transition between rounds
 const TRANSITION_DELAY = 20;
+// Percentage of viewport to use for circle generation
+const PLAY_AREA_WIDTH_PERCENT = 0.8;
+const PLAY_AREA_HEIGHT_PERCENT = 0.8;
 
 // Generate a random number between min and max
 const randomNumber = (min: number, max: number) => {
@@ -57,16 +60,20 @@ const wouldOverlap = (x: number, y: number, existingCircles: Circle[]): boolean 
 };
 
 // Generate a valid, non-overlapping position for a circle
-const generateValidPosition = (existingCircles: Circle[], maxWidth: number, maxHeight: number): { x: number; y: number } => {
-  // Padding from edges as percentage of dimensions
-  const horizontalPadding = Math.max(CIRCLE_SIZE / 2 + 10, maxWidth * 0.05);
-  const verticalPadding = Math.max(CIRCLE_SIZE / 2 + 10, maxHeight * 0.05);
+const generateValidPosition = (existingCircles: Circle[], totalWidth: number, totalHeight: number): { x: number; y: number } => {
+  // Calculate the 80% play area
+  const playAreaWidth = totalWidth * PLAY_AREA_WIDTH_PERCENT;
+  const playAreaHeight = totalHeight * PLAY_AREA_HEIGHT_PERCENT;
   
-  // Available area for circles
-  const minX = horizontalPadding;
-  const maxX = maxWidth - horizontalPadding;
-  const minY = 120 + verticalPadding; // Add 120px for header
-  const maxY = maxHeight - verticalPadding;
+  // Calculate offsets to center the play area
+  const offsetX = (totalWidth - playAreaWidth) / 2;
+  const offsetY = (totalHeight - playAreaHeight) / 2;
+  
+  // Set boundaries for placing circles
+  const minX = offsetX + CIRCLE_SIZE / 2;
+  const maxX = offsetX + playAreaWidth - CIRCLE_SIZE / 2;
+  const minY = offsetY + CIRCLE_SIZE / 2;
+  const maxY = offsetY + playAreaHeight - CIRCLE_SIZE / 2;
   
   // Max attempts to find a valid position
   const maxAttempts = 100;
@@ -173,11 +180,9 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
   // Initialize the game
   useEffect(() => {
     const updateDimensions = () => {
-      const gameContainer = document.getElementById("game-container");
-      if (gameContainer) {
-        setWidth(gameContainer.offsetWidth);
-        setHeight(gameContainer.offsetHeight);
-      }
+      // Use window dimensions instead of container dimensions
+      setWidth(window.innerWidth);
+      setHeight(window.innerHeight);
     };
 
     // Update dimensions and add event listener
@@ -214,6 +219,12 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
       generateNewRound();
     }, TRANSITION_DELAY);
   }, [generateNewRound]);
+
+  // Handle manual new round request
+  const handleNewRound = () => {
+    if (processingClick || preparingNewRound) return;
+    startNewRound(0);
+  };
 
   // Handle click on a circle
   const handleCircleClick = (circle: Circle) => {
@@ -291,40 +302,9 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      {/* Game header */}
-      <div className="bg-card shadow-md py-4 px-6 flex justify-between items-center border-b">
-        <div className="flex items-center gap-6">
-          {username && <div className="text-lg font-semibold">Player: {username}</div>}
-        </div>
-        <div className="flex items-center gap-6">
-          <div className="flex flex-col items-end">
-            <div className="text-3xl font-bold">{score}</div>
-            <div className="text-xs text-muted-foreground uppercase tracking-wide">Score</div>
-          </div>
-          <Button 
-            variant="default" 
-            className="px-5" 
-            onClick={handleShowSubmitForm}
-          >
-            Submit Score
-          </Button>
-        </div>
-      </div>
-
-      {/* Game instruction */}
-      <div className="bg-muted p-4 text-center">
-        <h2 className="text-xl font-bold">
-          Find the letter{" "}
-          <span className="font-bold text-3xl">{targetLetter}</span>
-        </h2>
-      </div>
-
-      {/* Game area */}
-      <div 
-        id="game-container" 
-        className="flex-1 relative bg-gradient-to-b from-background to-muted overflow-hidden p-[5%]"
-      >
+    <div className="h-screen w-full overflow-hidden relative bg-gradient-to-b from-background to-muted">
+      {/* Full viewport game area */}
+      <div className="absolute inset-0">
         {circles.map((circle) => (
           <button
             key={circle.id}
@@ -359,54 +339,94 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
             <span className="inline-flex items-center justify-center">{circle.letter}</span>
           </button>
         ))}
+      </div>
+      
+      {/* Floating UI elements */}
+      {/* Score card */}
+      <div className="absolute top-6 left-6 z-10 bg-card/90 backdrop-blur-sm shadow-md rounded-lg p-3">
+        <div className="flex flex-col items-center">
+          <div className="text-3xl font-bold">{score}</div>
+          <div className="text-xs text-muted-foreground uppercase tracking-wide">Score</div>
+        </div>
+      </div>
+      
+      {/* Target letter instruction */}
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10 bg-muted/90 backdrop-blur-sm shadow-md rounded-lg px-5 py-3">
+        <h2 className="text-xl font-bold">
+          Find the letter{" "}
+          <span className="font-bold text-3xl">{targetLetter}</span>
+        </h2>
+      </div>
+      
+      {/* Submit Score button */}
+      <div className="absolute top-6 right-6 z-10">
+        <Button 
+          variant="default" 
+          className="px-5 shadow-md" 
+          onClick={handleShowSubmitForm}
+        >
+          Submit Score
+        </Button>
+      </div>
+      
+      {/* New Round button at bottom */}
+      <div className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
+        <Button
+          size="lg"
+          className="px-8 py-6 text-lg shadow-lg"
+          onClick={handleNewRound}
+          disabled={processingClick || preparingNewRound}
+        >
+          New Round
+        </Button>
+      </div>
 
-        {/* Score submission form */}
-        {!gameActive && showSubmitForm && (
-          <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-            <Card className="w-80 p-6">
-              <h2 className="text-xl font-bold mb-4 text-center">Submit Your Score</h2>
-              <div className="mb-6 text-center">
-                <div className="text-4xl font-bold mb-1">{score}</div>
-                <div className="text-sm text-muted-foreground">Final Score</div>
-              </div>
-              <form onSubmit={handleSubmitScore}>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="playerName">Your Name</Label>
-                    <Input
-                      id="playerName"
-                      placeholder="Enter your name..."
-                      value={playerName}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        setPlayerName(e.target.value);
-                        if (submitError) setSubmitError(false);
-                      }}
-                      className={submitError ? "border-destructive" : ""}
-                      autoFocus
-                    />
-                    {submitError && (
-                      <p className="text-sm text-destructive">Please enter your name to submit</p>
-                    )}
-                  </div>
-                  
-                  <div className="pt-2">
-                    <div className="flex flex-col gap-2">
-                      <Button type="submit">Submit Score</Button>
-                      <Button 
-                        type="button"
-                        variant="outline" 
-                        onClick={handleSkipSubmit}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
+      {/* Score submission form */}
+      {!gameActive && showSubmitForm && (
+        <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-20">
+          <Card className="w-80 p-6">
+            <h2 className="text-xl font-bold mb-4 text-center">Submit Your Score</h2>
+            <div className="mb-6 text-center">
+              <div className="text-4xl font-bold mb-1">{score}</div>
+              <div className="text-sm text-muted-foreground">Final Score</div>
+            </div>
+            <form onSubmit={handleSubmitScore}>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="playerName">Your Name</Label>
+                  <Input
+                    id="playerName"
+                    placeholder="Enter your name..."
+                    value={playerName}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      setPlayerName(e.target.value);
+                      if (submitError) setSubmitError(false);
+                    }}
+                    className={submitError ? "border-destructive" : ""}
+                    autoFocus
+                  />
+                  {submitError && (
+                    <p className="text-sm text-destructive">Please enter your name to submit</p>
+                  )}
+                </div>
+                
+                <div className="pt-2">
+                  <div className="flex flex-col gap-2">
+                    <Button type="submit">Submit Score</Button>
+                    <Button 
+                      type="button"
+                      variant="outline" 
+                      onClick={handleSkipSubmit}
+                    >
+                      Cancel
+                    </Button>
                   </div>
                 </div>
-              </form>
-            </Card>
-          </div>
-        )}
-      </div>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
     </div>
   );
 } 
