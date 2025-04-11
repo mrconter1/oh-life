@@ -102,13 +102,15 @@ const wouldOverlap = (x: number, y: number, existingCircles: Circle[]): boolean 
 
 // Generate a valid, non-overlapping position for a circle
 const generateValidPosition = (existingCircles: Circle[], totalWidth: number, totalHeight: number): { x: number; y: number } => {
-  // Calculate the 80% play area
+  // Calculate the 80% play area width
   const playAreaWidth = totalWidth * PLAY_AREA_WIDTH_PERCENT;
-  const playAreaHeight = totalHeight * PLAY_AREA_HEIGHT_PERCENT;
+  // Adjust height to avoid top and bottom 15% of screen
+  const playAreaHeight = totalHeight * 0.7; // 70% of screen height (100% - 30%)
   
   // Calculate offsets to center the play area
   const offsetX = (totalWidth - playAreaWidth) / 2;
-  const offsetY = (totalHeight - playAreaHeight) / 2;
+  // Offset Y is now 15% of total height to avoid top area
+  const offsetY = totalHeight * 0.15;
   
   // Set boundaries for placing circles
   const minX = offsetX + CIRCLE_SIZE / 2;
