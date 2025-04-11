@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 
 // Define the available letters
 const LETTERS = [
-  "a", "b", "c", "d", "e", 
+  "b", "c", "d", "e", 
   "f", "g", "h", "k", "m",
   "n", "p", "r", "s", "t",
   "w", "x", "y", "z"
@@ -38,6 +38,32 @@ const TRANSITION_DELAY = 20;
 // Percentage of viewport to use for circle generation
 const PLAY_AREA_WIDTH_PERCENT = 0.8;
 const PLAY_AREA_HEIGHT_PERCENT = 0.8;
+
+// Text-to-speech function to read out a letter
+const speakLetter = (letter: string) => {
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    // Create a new utterance
+    const utterance = new SpeechSynthesisUtterance(letter);
+    
+    // Use a clear voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const englishVoice = voices.find(voice => voice.lang.includes('en'));
+    if (englishVoice) {
+      utterance.voice = englishVoice;
+    }
+    
+    // Set properties for better clarity
+    utterance.rate = 0.9; // Slightly slower for clarity
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    
+    // Speak the letter
+    window.speechSynthesis.speak(utterance);
+  }
+};
 
 // Generate a random number between min and max
 const randomNumber = (min: number, max: number) => {
@@ -133,7 +159,7 @@ type GamePlayProps = {
 export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
   const router = useRouter();
   const [circles, setCircles] = useState<Circle[]>([]);
-  const [targetLetter, setTargetLetter] = useState<LetterType>(LETTERS[0]);
+  const [targetLetter, setTargetLetter] = useState<LetterType | null>(null);
   const [score, setScore] = useState(0);
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
@@ -168,18 +194,42 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
       });
     });
     
-    setCircles(newCircles);
-    
     // Set a random target from the available circles
     const targetIndex = Math.floor(Math.random() * newCircles.length);
     const targetCircle = newCircles[targetIndex];
     
-    setTargetLetter(targetCircle.letter);
-    setPreparingNewRound(false);
+    // Set everything at once for faster rendering
+    setCircles(newCircles);
+    
+    // Small delay before setting the target letter and speaking
+    setTimeout(() => {
+      setTargetLetter(targetCircle.letter);
+      setPreparingNewRound(false);
+      
+      // Speak the letter once the target is set
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        speakLetter(targetCircle.letter);
+      }
+    }, 100);
   }, [width, height, gameActive, preparingNewRound]);
 
   // Initialize the game
   useEffect(() => {
+    // Initialize and load voices if available
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      // Load voices for Safari
+      const loadVoices = () => {
+        window.speechSynthesis.getVoices();
+      };
+      
+      loadVoices();
+      
+      // Safari and some browsers need this event to get the voices
+      if ('onvoiceschanged' in window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+      }
+    }
+
     const updateDimensions = () => {
       // Use window dimensions instead of container dimensions
       setWidth(window.innerWidth);
@@ -198,27 +248,36 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
     // Cleanup
     return () => {
       window.removeEventListener("resize", updateDimensions);
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
     };
   }, [width, height, generateNewRound]);
 
   // Start new round after clearing previous one
   const startNewRound = useCallback((scoreIncrement = 0) => {
+    // Cancel any ongoing speech
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    
     // Mark that we're preparing a new round to prevent race conditions
     setPreparingNewRound(true);
     
-    // Clear all circles first to stop any ongoing animations
+    // Clear all circles and target letter first to stop any ongoing animations
     setCircles([]);
+    setTargetLetter(null);
     
     // Update score if needed
     if (scoreIncrement > 0) {
       setScore(prev => prev + scoreIncrement);
     }
     
-    // Short delay to ensure clean transition
+    // Shorter delay to reduce blank screen time
     setTimeout(() => {
       setProcessingClick(false);
       generateNewRound();
-    }, TRANSITION_DELAY);
+    }, 100); // Reduced from 300ms to 100ms
   }, [generateNewRound]);
 
   // Handle manual new round request
@@ -227,12 +286,21 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
     startNewRound(0);
   };
 
+  // Handle speaking the current target letter
+  const handleSpeakLetter = () => {
+    if (targetLetter) {
+      speakLetter(targetLetter);
+    }
+  };
+
   // Handle click on a circle
   const handleCircleClick = (circle: Circle) => {
-    if (!gameActive || processingClick || preparingNewRound) return;
+    if (!gameActive || processingClick || preparingNewRound || !targetLetter) return;
     
     // Update circles with appropriate feedback
     setProcessingClick(true);
+    
+    // Don't speak the clicked letter anymore
     
     if (circle.letter === targetLetter) {
       // Correct choice - show green feedback
@@ -364,14 +432,6 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
           <div className="text-3xl font-bold">{score}</div>
           <div className="text-xs text-muted-foreground uppercase tracking-wide">Score</div>
         </div>
-      </div>
-      
-      {/* Target letter instruction */}
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10 bg-muted/90 backdrop-blur-sm shadow-md rounded-lg px-5 py-3">
-        <h2 className="text-xl font-bold">
-          Find the letter{" "}
-          <span className="font-bold text-3xl">{targetLetter}</span>
-        </h2>
       </div>
       
       {/* Submit Score button */}
