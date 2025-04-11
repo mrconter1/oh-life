@@ -65,8 +65,8 @@ export function MainMenu() {
                 <CardTitle className="text-xl font-semibold">Leaderboard</CardTitle>
                 <CardDescription className="text-sm">The best players ranked by score</CardDescription>
               </div>
-              <div className="bg-muted px-2 py-0.5 rounded-full text-xs font-medium">
-                Top 10
+              <div className="bg-primary/10 text-primary px-2.5 py-1 rounded-md text-xs font-medium">
+                High Scores
               </div>
             </CardHeader>
             <CardContent className="pt-0 pb-2">
