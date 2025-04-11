@@ -313,15 +313,28 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
         {circles.map((circle) => (
           <button
             key={circle.id}
-            className={`absolute w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white transform transition-all hover:scale-110 ${COLOR_CLASSES[circle.color]}`}
+            className={`absolute w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white transition-transform duration-200 ${COLOR_CLASSES[circle.color]}`}
             style={{
               left: `${circle.x}px`,
               top: `${circle.y}px`,
-              transform: "translate(-50%, -50%)",
+              transform: `translate(-50%, -50%) scale(${1})`,
+              lineHeight: "1",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              paddingBottom: "2px", // Slight offset to account for visual centering
+              transformOrigin: "center center",
+              willChange: "transform",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translate(-50%, -50%) scale(1.1)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translate(-50%, -50%) scale(1)";
             }}
             onClick={() => handleCircleClick(circle)}
           >
-            {circle.letter}
+            <span className="inline-flex items-center justify-center">{circle.letter}</span>
           </button>
         ))}
 
