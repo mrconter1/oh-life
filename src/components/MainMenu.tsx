@@ -43,7 +43,9 @@ export function MainMenu() {
     <div className="flex flex-col items-center justify-center h-screen overflow-hidden bg-gradient-to-b from-background to-background/90">
       <div className="w-full max-w-5xl px-4 py-4">
         <div className="text-center mb-6">
-          <h1 className="text-5xl font-bold mb-2 text-foreground">Oh Life!</h1>
+          <div className="inline-block bg-black px-6 py-3 rounded-lg shadow-md mb-2 transform hover:scale-105 transition-transform duration-200">
+            <h1 className="text-5xl font-bold text-white">Oh Life!</h1>
+          </div>
           <p className="text-muted-foreground text-sm">Let's have fun</p>
         </div>
         
@@ -93,14 +95,14 @@ export function MainMenu() {
               </div>
               <Link href="/game" className="w-full self-center mt-auto">
                 <Button 
-                  className="w-full py-6 text-base font-medium shadow-sm transition-all hover:shadow-md cursor-pointer"
+                  className="w-full py-6 text-base font-medium shadow-sm transition-all hover:shadow-md"
                 >
                   Play Now
                 </Button>
               </Link>
             </CardContent>
             <CardFooter className="py-3 text-center border-t border-border/20 bg-muted/20">
-              <span className="text-xs text-muted-foreground text-center w-full">Your progress is lost if you exit – submit your score when you're done</span>
+              <span className="text-xs text-muted-foreground">Your progress is lost if you exit – submit your score when you're done</span>
             </CardFooter>
           </Card>
 
@@ -176,7 +178,7 @@ export function MainMenu() {
               </div>
             </CardContent>
             <CardFooter className="py-3 text-center border-t border-border/20 bg-muted/20">
-              <span className="text-xs text-muted-foreground text-center w-full">Play now to get your name on the board!</span>
+              <span className="text-xs text-muted-foreground">Play now to get your name on the board!</span>
             </CardFooter>
           </Card>
         </div>
