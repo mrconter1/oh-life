@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Oh Life! - A Game of Choices",
-  description: "Play Oh Life! - A game of choices and consequences",
+  title: "Oh Life! - Can You Top the Leaderboard?",
+  description: "Find letters, earn points, climb the leaderboard in this fun audio-visual game",
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
