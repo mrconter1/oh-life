@@ -189,6 +189,7 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
   const [preparingNewRound, setPreparingNewRound] = useState(false);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [newRoundButtonDisabled, setNewRoundButtonDisabled] = useState(false);
 
   // Generate new circles and set a new target
   const generateNewRound = useCallback(() => {
@@ -312,11 +313,49 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
     }, 100); // Reduced from 300ms to 100ms
   }, [generateNewRound, preparingNewRound]);
 
-  // Handle manual new round request
+  // Handle manual new round request - separate from automatic round generation
   const handleNewRound = () => {
     if (processingClick || preparingNewRound) return;
+    
+    // Only disable the New Round button when manually clicked
+    setNewRoundButtonDisabled(true);
     startNewRound(0);
+    
+    // Re-enable the button after the round is generated
+    setTimeout(() => {
+      setNewRoundButtonDisabled(false);
+    }, 350); // Slightly longer than the animation duration
   };
+
+  // Handle automatic round generation after a click (correct or incorrect)
+  // This avoids animation of the New Round button
+  const startAutomaticNewRound = useCallback((scoreIncrement = 0) => {
+    // If already preparing a new round, don't start another one
+    if (preparingNewRound) return;
+    
+    // Cancel any ongoing speech
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    
+    // Mark that we're preparing a new round to prevent race conditions
+    setPreparingNewRound(true);
+    
+    // Clear all circles and target letter first to stop any ongoing animations
+    setCircles([]);
+    setTargetLetter(null);
+    
+    // Update score if needed
+    if (scoreIncrement > 0) {
+      setScore(prev => prev + scoreIncrement);
+    }
+    
+    // Shorter delay to reduce blank screen time
+    setTimeout(() => {
+      setProcessingClick(false);
+      generateNewRound();
+    }, 100);
+  }, [generateNewRound, preparingNewRound]);
 
   // Handle speaking the current target letter
   const handleSpeakLetter = () => {
@@ -344,7 +383,7 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
       
       // Wait for the animation to complete
       setTimeout(() => {
-        startNewRound(1); // Start new round with +1 score
+        startAutomaticNewRound(1); // Start new round with +1 score
       }, FEEDBACK_DURATION);
     } else {
       // Incorrect choice - show red feedback
@@ -356,7 +395,7 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
       
       // Wait for the animation to complete, then generate new round without adding score
       setTimeout(() => {
-        startNewRound(0); // Start new round with no score increase
+        startAutomaticNewRound(0); // Start new round with no score increase
       }, FEEDBACK_DURATION);
     }
   };
@@ -508,7 +547,7 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
           size="lg"
           className="px-8 py-6 text-lg shadow-lg cursor-pointer hover:cursor-pointer"
           onClick={handleNewRound}
-          disabled={processingClick || preparingNewRound}
+          disabled={newRoundButtonDisabled}
         >
           New Round
         </Button>
