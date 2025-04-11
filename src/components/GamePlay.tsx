@@ -355,6 +355,7 @@ export function GamePlay({ }: GamePlayProps = {}) {
   }, [generateNewRound, preparingNewRound]);
 
   // Handle speaking the current target letter
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSpeakLetter = () => {
     if (targetLetter) {
       speakLetter(targetLetter);

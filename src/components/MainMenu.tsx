@@ -46,7 +46,7 @@ export function MainMenu() {
           <div className="inline-block bg-black px-6 py-3 rounded-lg shadow-md mb-2 transform hover:scale-105 transition-transform duration-200">
             <h1 className="text-5xl font-bold text-white">Oh Life!</h1>
           </div>
-          <p className="text-muted-foreground text-sm">Let's have fun</p>
+          <p className="text-muted-foreground text-sm">Let&apos;s have fun</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
