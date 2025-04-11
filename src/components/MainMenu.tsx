@@ -93,7 +93,7 @@ export function MainMenu() {
               </Link>
             </CardContent>
             <CardFooter className="py-2 text-center border-t border-border/20 bg-muted/20">
-              <span className="text-xs text-muted-foreground text-center w-full">Submit your score when you decide you've played enough</span>
+              <span className="text-xs text-muted-foreground text-center w-full">Submit your score when you decide you&apos;ve played enough</span>
             </CardFooter>
           </Card>
 
