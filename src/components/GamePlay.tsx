@@ -58,7 +58,7 @@ const speakLetter = (letter: string) => {
     // Set properties for better clarity
     utterance.rate = 0.9; // Slightly slower for clarity
     utterance.pitch = 1;
-    utterance.volume = 1;
+    utterance.volume = 0.5; // Set volume to 50%
     
     // Speak the letter
     window.speechSynthesis.speak(utterance);
