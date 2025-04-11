@@ -84,10 +84,6 @@ export function MainMenu() {
                 </div>
               </div>
               
-              <div className="bg-muted/30 rounded-lg p-3 text-xs sm:text-sm text-muted-foreground">
-                <p>This game is deliberately designed with minimal stimulation and low volume to test your focus and attention. There is no time limit or penalty for wrong clicks.</p>
-              </div>
-              
               <Link href="/game" className="w-full self-center mt-auto">
                 <Button 
                   className="w-full py-4 sm:py-6 text-sm sm:text-base font-medium shadow-sm transition-all hover:shadow-md cursor-pointer"
