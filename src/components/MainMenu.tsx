@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,23 +11,33 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-// Mock data for the scoreboard
-const MOCK_SCORES = [
-  { id: 1, name: "Alice", score: 950 },
-  { id: 2, name: "Bob", score: 820 },
-  { id: 3, name: "Charlie", score: 780 },
-  { id: 4, name: "Dave", score: 650 },
-  { id: 5, name: "Eve", score: 520 },
-  { id: 6, name: "Frank", score: 490 },
-  { id: 7, name: "Grace", score: 450 },
-  { id: 8, name: "Hannah", score: 410 },
-  { id: 9, name: "Ian", score: 380 },
-  { id: 10, name: "Julia", score: 350 },
-];
+import { getTopScores, type Score } from "@/lib/supabase";
 
 export function MainMenu() {
-  const [scores] = useState(MOCK_SCORES);
+  const [scores, setScores] = useState<Score[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchScores() {
+      setLoading(true);
+      try {
+        const { scores: fetchedScores, error } = await getTopScores(25);
+        if (error) {
+          setError(error);
+        } else {
+          setScores(fetchedScores);
+        }
+      } catch (err) {
+        setError('Failed to load scores');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchScores();
+  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen overflow-hidden bg-gradient-to-b from-background to-background/90">
@@ -103,47 +113,65 @@ export function MainMenu() {
                   <CardDescription className="text-sm mt-1">The best players ranked by score</CardDescription>
                 </div>
                 <div className="bg-primary/10 text-primary px-2.5 py-1 rounded-md text-xs font-medium">
-                  High Scores
+                  Top 25
                 </div>
               </CardHeader>
             </div>
             <CardContent className="pt-0 pb-0 flex-grow">
               <div className="relative h-full">
-                <div className="overflow-y-auto max-h-[270px] scrollbar-hide">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border/30">
-                        <th className="w-10 py-2.5 text-center text-muted-foreground font-medium text-xs sticky top-0 bg-card">#</th>
-                        <th className="py-2.5 text-left text-muted-foreground font-medium text-xs sticky top-0 bg-card">Name</th>
-                        <th className="py-2.5 text-right text-muted-foreground font-medium text-xs sticky top-0 bg-card">Score</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {scores.map((score, index) => (
-                        <tr 
-                          key={score.id} 
-                          className="border-b border-border/10 last:border-0"
-                        >
-                          <td className="py-2 text-center">
-                            {index < 3 ? (
-                              <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-medium ${
-                                index === 0 ? 'bg-amber-100 text-amber-600' : 
-                                index === 1 ? 'bg-slate-100 text-slate-500' : 
-                                'bg-amber-50 text-amber-700'
-                              }`}>
-                                {index + 1}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground text-xs font-medium">{index + 1}</span>
-                            )}
-                          </td>
-                          <td className="py-2 font-medium">{score.name}</td>
-                          <td className="py-2 text-right font-mono font-medium">{score.score}</td>
+                {loading ? (
+                  <div className="flex items-center justify-center h-[270px]">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                  </div>
+                ) : error ? (
+                  <div className="flex items-center justify-center h-[270px] text-sm text-muted-foreground">
+                    Failed to load scores. Please try again later.
+                  </div>
+                ) : (
+                  <div className="overflow-y-auto max-h-[270px] scrollbar-hide">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-border/30">
+                          <th className="w-10 py-2.5 text-center text-muted-foreground font-medium text-xs sticky top-0 bg-card">#</th>
+                          <th className="py-2.5 text-left text-muted-foreground font-medium text-xs sticky top-0 bg-card">Name</th>
+                          <th className="py-2.5 text-right text-muted-foreground font-medium text-xs sticky top-0 bg-card">Score</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {scores.length > 0 ? (
+                          scores.map((score, index) => (
+                            <tr 
+                              key={score.id} 
+                              className="border-b border-border/10 last:border-0"
+                            >
+                              <td className="py-2 text-center">
+                                {index < 3 ? (
+                                  <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-medium ${
+                                    index === 0 ? 'bg-amber-100 text-amber-600' : 
+                                    index === 1 ? 'bg-slate-100 text-slate-500' : 
+                                    'bg-amber-50 text-amber-700'
+                                  }`}>
+                                    {index + 1}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground text-xs font-medium">{index + 1}</span>
+                                )}
+                              </td>
+                              <td className="py-2 font-medium">{score.name}</td>
+                              <td className="py-2 text-right font-mono font-medium">{score.score}</td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={3} className="py-10 text-center text-sm text-muted-foreground">
+                              No scores yet. Be the first to play!
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
                 <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-card to-transparent pointer-events-none"></div>
               </div>
             </CardContent>

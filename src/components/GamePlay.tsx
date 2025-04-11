@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { submitScore } from "@/lib/supabase";
 
 // Define the available letters
 const LETTERS = [
@@ -187,6 +188,7 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
   const [processingClick, setProcessingClick] = useState(false);
   const [preparingNewRound, setPreparingNewRound] = useState(false);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   // Generate new circles and set a new target
   const generateNewRound = useCallback(() => {
@@ -359,10 +361,40 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
     }
   };
 
-  // Handle submitting the game
+  // Handle showing submit form
   const handleShowSubmitForm = () => {
     setGameActive(false);
     setShowSubmitForm(true);
+  };
+
+  // Handle submitting the game
+  const handleSubmitScore = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!playerName.trim()) {
+      setSubmitError(true);
+      return;
+    }
+    
+    // Loading state while submitting
+    setSubmitting(true);
+    
+    try {
+      // Submit the score to Supabase
+      const { success, error } = await submitScore(playerName.trim(), score);
+      
+      if (!success) {
+        throw new Error(error || "Failed to submit score");
+      }
+      
+      // Return to the main menu on success
+      router.push("/");
+    } catch (error) {
+      console.error("Error submitting score:", error);
+      setSubmitError(true);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // Handle showing exit confirmation
@@ -380,22 +412,6 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
     setShowExitConfirmation(false);
   };
 
-  // Handle score submission
-  const handleSubmitScore = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!playerName.trim()) {
-      setSubmitError(true);
-      return;
-    }
-    
-    // Here you would save the score to a database
-    console.log(`Submitted score: ${score} for player ${playerName}`);
-    
-    // Return to the main menu
-    router.push("/");
-  };
-  
   // Handle canceling score submission
   const handleSkipSubmit = () => {
     setShowSubmitForm(false);
@@ -529,7 +545,7 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
                 
                 <div className="pt-2">
                   <div className="flex flex-col gap-2">
-                    <Button type="submit" className="cursor-pointer hover:cursor-pointer">Submit Score</Button>
+                    <Button type="submit" className="cursor-pointer hover:cursor-pointer" disabled={submitting}>Submit Score</Button>
                     <Button 
                       type="button"
                       variant="outline" 
