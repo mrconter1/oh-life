@@ -58,10 +58,25 @@ const speakLetter = (letter: string) => {
     // Set properties for better clarity
     utterance.rate = 0.9; // Slightly slower for clarity
     utterance.pitch = 1;
-    utterance.volume = 0.5; // Set volume to 50%
+    utterance.volume = 0.5; // Set volume to 100% for better audibility
     
     // Speak the letter
     window.speechSynthesis.speak(utterance);
+    
+    // Fallback in case speech doesn't trigger
+    let hasSpeechStarted = false;
+    
+    utterance.onstart = () => {
+      hasSpeechStarted = true;
+    };
+    
+    // Check if speech started after a short delay, and retry if it didn't
+    setTimeout(() => {
+      if (!hasSpeechStarted) {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+      }
+    }, 100);
   }
 };
 
@@ -175,6 +190,9 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
   const generateNewRound = useCallback(() => {
     if (!gameActive || preparingNewRound) return;
     
+    // Set preparing flag immediately to prevent multiple generations
+    setPreparingNewRound(true);
+    
     // Shuffle all available letters
     const shuffledLetters = shuffleArray([...LETTERS]);
     
@@ -208,7 +226,10 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
       
       // Speak the letter once the target is set
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        speakLetter(targetCircle.letter);
+        // Add a small delay before speaking to ensure the speech synthesis is ready
+        setTimeout(() => {
+          speakLetter(targetCircle.letter);
+        }, 50);
       }
     }, 100);
   }, [width, height, gameActive, preparingNewRound]);
@@ -240,8 +261,10 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
     updateDimensions();
     window.addEventListener("resize", updateDimensions);
 
-    // Start the game when dimensions are set
-    if (width > 0 && height > 0) {
+    // Start the game when dimensions are set and it's the initial render
+    // Use a ref to track if the initial round has been generated
+    const isInitialRender = circles.length === 0 && !preparingNewRound;
+    if (width > 0 && height > 0 && isInitialRender && gameActive) {
       generateNewRound();
     }
 
@@ -252,10 +275,13 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
         window.speechSynthesis.cancel();
       }
     };
-  }, [width, height, generateNewRound]);
+  }, [width, height, generateNewRound, circles.length, preparingNewRound, gameActive]);
 
   // Start new round after clearing previous one
   const startNewRound = useCallback((scoreIncrement = 0) => {
+    // If already preparing a new round, don't start another one
+    if (preparingNewRound) return;
+    
     // Cancel any ongoing speech
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -276,9 +302,11 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
     // Shorter delay to reduce blank screen time
     setTimeout(() => {
       setProcessingClick(false);
+      // Don't need to call setPreparingNewRound(true) again here
+      // since generateNewRound now sets it immediately
       generateNewRound();
     }, 100); // Reduced from 300ms to 100ms
-  }, [generateNewRound]);
+  }, [generateNewRound, preparingNewRound]);
 
   // Handle manual new round request
   const handleNewRound = () => {
