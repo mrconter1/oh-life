@@ -569,26 +569,6 @@ export function GamePlay({ }: GamePlayProps = {}) {
         </Button>
       </div>
       
-      {/* Replay letter button at bottom left */}
-      <div className="absolute bottom-8 left-4 sm:left-6 z-10">
-        <Button
-          variant="outline"
-          size="icon"
-          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md cursor-pointer hover:cursor-pointer"
-          onClick={() => {
-            if (targetLetter) {
-              speakLetter(targetLetter);
-            }
-          }}
-          aria-label="Repeat Letter"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-          </svg>
-        </Button>
-      </div>
-      
       {/* New Round button at bottom */}
       <div className="absolute bottom-8 right-0 left-0 flex justify-center z-10">
         <Button
