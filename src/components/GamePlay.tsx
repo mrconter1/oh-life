@@ -22,6 +22,7 @@ type Circle = {
   letter: LetterType;
   x: number;
   y: number;
+  feedback?: "correct" | "incorrect"; // Visual feedback state
 };
 
 // Size of each circle (diameter in pixels)
@@ -30,6 +31,10 @@ const CIRCLE_SIZE = 48;
 const MIN_DISTANCE = CIRCLE_SIZE + 8; // Add a small buffer
 // Number of circles to display per round
 const CIRCLES_PER_ROUND = 15;
+// Duration of feedback animation in milliseconds
+const FEEDBACK_DURATION = 300;
+// Small delay to ensure clean transition between rounds
+const TRANSITION_DELAY = 20;
 
 // Generate a random number between min and max
 const randomNumber = (min: number, max: number) => {
@@ -129,10 +134,12 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
   const [showSubmitForm, setShowSubmitForm] = useState(false);
   const [playerName, setPlayerName] = useState("");
   const [submitError, setSubmitError] = useState(false);
+  const [processingClick, setProcessingClick] = useState(false);
+  const [preparingNewRound, setPreparingNewRound] = useState(false);
 
   // Generate new circles and set a new target
   const generateNewRound = useCallback(() => {
-    if (!gameActive) return;
+    if (!gameActive || preparingNewRound) return;
     
     // Shuffle all available letters
     const shuffledLetters = shuffleArray([...LETTERS]);
@@ -160,7 +167,8 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
     const targetCircle = newCircles[targetIndex];
     
     setTargetLetter(targetCircle.letter);
-  }, [width, height, gameActive]);
+    setPreparingNewRound(false);
+  }, [width, height, gameActive, preparingNewRound]);
 
   // Initialize the game
   useEffect(() => {
@@ -187,14 +195,57 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
     };
   }, [width, height, generateNewRound]);
 
+  // Start new round after clearing previous one
+  const startNewRound = useCallback((scoreIncrement = 0) => {
+    // Mark that we're preparing a new round to prevent race conditions
+    setPreparingNewRound(true);
+    
+    // Clear all circles first to stop any ongoing animations
+    setCircles([]);
+    
+    // Update score if needed
+    if (scoreIncrement > 0) {
+      setScore(prev => prev + scoreIncrement);
+    }
+    
+    // Short delay to ensure clean transition
+    setTimeout(() => {
+      setProcessingClick(false);
+      generateNewRound();
+    }, TRANSITION_DELAY);
+  }, [generateNewRound]);
+
   // Handle click on a circle
   const handleCircleClick = (circle: Circle) => {
-    if (!gameActive) return;
+    if (!gameActive || processingClick || preparingNewRound) return;
+    
+    // Update circles with appropriate feedback
+    setProcessingClick(true);
     
     if (circle.letter === targetLetter) {
-      // Correct choice
-      setScore((prev) => prev + 1);
-      generateNewRound();
+      // Correct choice - show green feedback
+      setCircles(prevCircles => 
+        prevCircles.map(c => 
+          c.id === circle.id ? { ...c, feedback: "correct" } : c
+        )
+      );
+      
+      // Wait for the animation to complete
+      setTimeout(() => {
+        startNewRound(1); // Start new round with +1 score
+      }, FEEDBACK_DURATION);
+    } else {
+      // Incorrect choice - show red feedback
+      setCircles(prevCircles => 
+        prevCircles.map(c => 
+          c.id === circle.id ? { ...c, feedback: "incorrect" } : c
+        )
+      );
+      
+      // Wait for the animation to complete, then generate new round without adding score
+      setTimeout(() => {
+        startNewRound(0); // Start new round with no score increase
+      }, FEEDBACK_DURATION);
     }
   };
 
@@ -223,6 +274,20 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
   // Handle canceling score submission
   const handleSkipSubmit = () => {
     router.push("/");
+  };
+
+  // Get the feedback styles based on feedback state
+  const getFeedbackStyles = (feedback?: "correct" | "incorrect") => {
+    // Base styles
+    const styles: React.CSSProperties = {};
+    
+    if (feedback === "correct") {
+      styles.boxShadow = '0 0 0 4px rgba(34, 197, 94, 0.9)';
+    } else if (feedback === "incorrect") {
+      styles.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.9)';
+    }
+    
+    return styles;
   };
 
   return (
@@ -263,7 +328,7 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
         {circles.map((circle) => (
           <button
             key={circle.id}
-            className="absolute w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white transition-transform duration-200 bg-black hover:bg-gray-800"
+            className="absolute w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white transition-all duration-300 bg-black hover:bg-gray-800 cursor-pointer"
             style={{
               left: `${circle.x}px`,
               top: `${circle.y}px`,
@@ -274,15 +339,22 @@ export function GamePlay({ username, onGameOver }: GamePlayProps = {}) {
               justifyContent: "center",
               paddingBottom: "2px", // Slight offset for visual centering
               transformOrigin: "center center",
-              willChange: "transform",
+              willChange: "transform, box-shadow",
+              ...getFeedbackStyles(circle.feedback),
+              transition: "transform 0.2s ease, box-shadow 0.3s ease"
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translate(-50%, -50%) scale(1.1)";
+              if (!processingClick && !preparingNewRound) {
+                e.currentTarget.style.transform = "translate(-50%, -50%) scale(1.1)";
+              }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translate(-50%, -50%) scale(1)";
+              if (!processingClick && !preparingNewRound) {
+                e.currentTarget.style.transform = "translate(-50%, -50%) scale(1)";
+              }
             }}
             onClick={() => handleCircleClick(circle)}
+            disabled={processingClick || preparingNewRound}
           >
             <span className="inline-flex items-center justify-center">{circle.letter}</span>
           </button>
