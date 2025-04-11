@@ -48,9 +48,14 @@ export function MainMenu() {
               <CardDescription>Begin a new game and see where life takes you</CardDescription>
             </CardHeader>
             <CardContent className="flex justify-center py-6">
-              <Button size="lg" className="w-full md:w-2/3 h-16 text-lg font-semibold">
-                Start Game
-              </Button>
+              <Link href="/game" className="w-full md:w-2/3">
+                <Button 
+                  size="lg" 
+                  className="w-full h-16 text-lg font-semibold"
+                >
+                  Start Game
+                </Button>
+              </Link>
             </CardContent>
             <CardFooter className="flex justify-center text-sm text-muted-foreground">
               Your choices will shape your destiny
