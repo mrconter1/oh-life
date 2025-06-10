@@ -2,6 +2,8 @@
 
 Oh Life! is a game where you listen to a spoken letter, find and click the correct letter among multiple options on the screen to score points and compete on a global leaderboard.
 
+![image](https://github.com/user-attachments/assets/5f79190f-b132-4530-9432-60d237ec299b)
+
 ## Overview
 
 "Oh Life!" is a simple but engaging game where players:
